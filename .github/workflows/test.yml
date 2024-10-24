@@ -1,0 +1,29 @@
+name: Test
+
+on: [push, pull_request]
+
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: [ubuntu-latest, macos-latest, windows-latest]
+        go: ["1.19", "1.18", "1.17", "1.16"]
+
+    runs-on: ${{ matrix.platform }}
+
+    steps:
+    - name: Check out code
+      uses: actions/checkout@v3
+
+    - name: Set up Go
+      uses: actions/setup-go@v3
+      with:
+        go-version: "${{ matrix.go }}"
+        cache: true
+
+    - name: Add problem matcher
+      run: echo "::add-matcher::$PWD/.github/matchers.json"
+
+    - name: Run tests
+      run: go test -timeout 30s -v $(go list -v ./... | grep -vE '(tests|examples)$')
